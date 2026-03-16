@@ -308,8 +308,10 @@ function resetLevel() {
         level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
     }
 
-    for (let i = 34; i < 50; i++) {
+    // Continuing the floor
+    for (let i = 34; i < 150; i++) {
         level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
+        level.blocks.push(new Block(i * TILE_SIZE, 224, 'solid'));
     }
 
     // Question blocks
@@ -353,13 +355,10 @@ function update() {
         }
     });
 
-    // Camera follow (scroll to right only, or allow left inside screen)
-    if (player.x > cameraX + 100) {
-        cameraX = player.x - 100;
-    } else if (player.x < cameraX) { // Don't allow moving left past camera
-        player.x = cameraX;
-        player.vx = 0;
-    }
+    // Camera follow (center on player)
+    cameraX = player.x - (canvas.width / 2) + (player.width / 2);
+    if (cameraX < 0) cameraX = 0; // Prevent scrolling before the start
+
 
     // Update UI
     document.getElementById('score').innerText = `SCORE: ${game.score.toString().padStart(6, '0')}`;

@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Press Start 2P', monospace;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 1024px;   /* 256 * 4 */
+    max-height: 896px;   /* 224 * 4 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    background-color: #5c94fc; /* Mario Bros sky blue */
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    /* Keeps the pixels sharp when scaling canvas up */
+    image-rendering: pixelated; 
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+#ui-layer {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    right: 5%;
+    display: flex;
+    justify-content: space-between;
+    color: #fff;
+    font-size: 1.2vw;
+    text-shadow: 2px 2px 0 #000;
+    pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+    #ui-layer {
+        font-size: 16px;
+    }
+}

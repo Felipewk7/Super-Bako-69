@@ -1,0 +1,16 @@
+{
+  "project": {
+    "name": "Gravity Quest",
+    "version": "1.0.0",
+    "genre": "Platformer 2D Side-scroller",
+    "resolution": {
+      "width": 256,
+      "height": 224
+    },
+    "description": "Retro 8-bit NES style platformer game."
+  },
+  "deploy": {
+    "platform": "GitHub Pages",
+    "relativePath": true
+  }
+}

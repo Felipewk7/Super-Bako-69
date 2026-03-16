@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Quest</title>
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- The original NES resolution is roughly 256x224 -->
+        <canvas id="gameCanvas" width="256" height="224"></canvas>
+        <div id="ui-layer">
+            <span id="score">SCORE: 000000</span>
+            <span id="coins">COINS: x00</span>
+            <span id="time">TIME: 400</span>
+        </div>
+    </div>
+    
+    <!-- Game Scripts -->
+    <script src="./src/game.js"></script>
+</body>
+</html>

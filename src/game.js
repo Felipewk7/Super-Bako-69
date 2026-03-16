@@ -297,19 +297,8 @@ function resetLevel() {
     level.enemies = [];
     cameraX = 0;
     
-    // Floor (safe intro for 5 seconds / approx 300 pixels)
-    for (let i = 0; i < 20; i++) {
-        level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
-        level.blocks.push(new Block(i * TILE_SIZE, 224, 'solid'));
-    }
-
-    // Jumps over holes
-    for (let i = 23; i < 30; i++) {
-        level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
-    }
-
-    // Continuing the floor
-    for (let i = 34; i < 150; i++) {
+    // Continuous Solid Floor to avoid the illusion of terrain vanishing
+    for (let i = 0; i < 150; i++) {
         level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
         level.blocks.push(new Block(i * TILE_SIZE, 224, 'solid'));
     }

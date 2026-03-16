@@ -25,7 +25,6 @@ html, body {
 }
 
 canvas {
-    background-color: #5c94fc; /* Mario Bros sky blue */
     width: 100%;
     height: 100%;
     object-fit: contain;

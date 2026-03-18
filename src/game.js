@@ -10,7 +10,6 @@ const restartBtn = document.getElementById('restart-btn');
 const scoreEl = document.getElementById('score');
 const coinsEl = document.getElementById('coins');
 const timeEl = document.getElementById('time');
-const finalScoreEl = document.getElementById('final-score');
 
 // Configs
 const TILE_SIZE = 16;
@@ -19,6 +18,17 @@ const FRICTION = 0.8;
 const MAX_FALL_SPEED = 6;
 
 let gameState = 'menu'; // 'menu', 'playing', 'gameOver'
+let player = null;
+let level = {
+    blocks: [],
+    enemies: []
+};
+let cameraX = 0;
+let gameData = {
+    score: 0,
+    coins: 0,
+    time: 400
+};
 
 // Input handling
 const keys = {
@@ -43,17 +53,7 @@ window.addEventListener('keyup', e => {
     if (e.code === 'ArrowDown' || e.code === 'KeyS') keys.down = false;
 });
 
-// A simple AABB collision check
-function testAABB(rect1, rect2) {
-    return (
-        rect1.x < rect2.x + rect2.width &&
-        rect1.x + rect1.width > rect2.x &&
-        rect1.y < rect2.y + rect2.height &&
-        rect1.y + rect1.height > rect2.y
-    );
-}
-
-// Asset Loader
+// Assets
 const assets = {};
 function loadImage(id, src) {
     const img = new Image();
@@ -77,20 +77,28 @@ function drawSprite(id, x, y, width, height, fallbackColor) {
     }
 }
 
+function testAABB(rect1, rect2) {
+    return (
+        rect1.x < rect2.x + rect2.width &&
+        rect1.x + rect1.width > rect2.x &&
+        rect1.y < rect2.y + rect2.height &&
+        rect1.y + rect1.height > rect2.y
+    );
+}
+
 class Player {
     constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 16;
+        this.width = 14; // Slightly smaller for better feel
         this.height = 16;
         this.vx = 0;
         this.vy = 0;
-        this.speed = 1.5;
-        this.jumpPower = 4;
+        this.speed = 2;
+        this.jumpPower = 4.5;
         this.isGrounded = false;
         this.jumpTime = 0;
         this.state = 'idle'; // idle, walk, jump, die
-        this.color = '#ff0000'; // Fallback
     }
 
     update() {
@@ -100,70 +108,54 @@ class Player {
             return;
         }
 
-        // Horizontal movement with inertia
         if (keys.left) {
-            this.vx -= 0.2;
+            this.vx -= 0.3;
             this.state = 'walk';
         } else if (keys.right) {
-            this.vx += 0.2;
+            this.vx += 0.3;
             this.state = 'walk';
         } else {
-            this.vx *= FRICTION; // Friction
+            this.vx *= FRICTION;
             if (Math.abs(this.vx) < 0.1) this.vx = 0;
             this.state = 'idle';
         }
 
-        // Limit speed
         if (this.vx > this.speed) this.vx = this.speed;
         if (this.vx < -this.speed) this.vx = -this.speed;
 
-        // Variable Jump
         if (keys.up) {
             if (this.isGrounded) {
                 this.vy = -this.jumpPower;
                 this.isGrounded = false;
-                this.jumpTime = 10;
+                this.jumpTime = 12;
             } else if (this.jumpTime > 0) {
-                this.vy -= 0.15; // Hold to jump higher
+                this.vy -= 0.18;
                 this.jumpTime--;
             }
         } else {
             this.jumpTime = 0;
         }
 
-        if (!this.isGrounded) {
-            this.state = 'jump';
-        }
-
         this.vy += GRAVITY;
         if (this.vy > MAX_FALL_SPEED) this.vy = MAX_FALL_SPEED;
 
-        // Move X and test collisions
         this.x += this.vx;
         this.handleCollisions(true);
 
-        // Move Y and test collisions
         this.y += this.vy;
         this.isGrounded = false;
         this.handleCollisions(false);
-        
-        // Death by falling
-        if (this.y > canvas.height + 50) {
-            this.die();
-        }
+
+        if (this.y > canvas.height + 64) this.die();
     }
 
     handleCollisions(isHoriz) {
         for (let b of level.blocks) {
             if (testAABB(this, b)) {
                 if (isHoriz) {
-                    if (this.vx > 0) {
-                        this.x = b.x - this.width;
-                        this.vx = 0;
-                    } else if (this.vx < 0) {
-                        this.x = b.x + b.width;
-                        this.vx = 0;
-                    }
+                    if (this.vx > 0) this.x = b.x - this.width;
+                    else if (this.vx < 0) this.x = b.x + b.width;
+                    this.vx = 0;
                 } else {
                     if (this.vy > 0) {
                         this.y = b.y - this.height;
@@ -183,16 +175,13 @@ class Player {
     die() {
         if (this.state === 'die') return;
         this.state = 'die';
-        this.vy = -4; // Bounce up
+        this.vy = -5;
         this.vx = 0;
-        
-        setTimeout(() => {
-            setGameOver();
-        }, 1500);
+        setTimeout(setGameOver, 1500);
     }
 
     draw() {
-        drawSprite('player', this.x, this.y, this.width, this.height, this.color);
+        drawSprite('player', this.x, this.y, this.width, this.height, '#f00');
     }
 }
 
@@ -205,29 +194,24 @@ class Enemy {
         this.vx = -0.5;
         this.vy = 0;
         this.isDead = false;
-        this.color = '#8A2BE2'; // Fallback
     }
 
     update() {
         if (this.isDead) return;
-
         this.vy += GRAVITY;
-        
-        // Move X
         this.x += this.vx;
+        
         let hitWall = false;
         for (let b of level.blocks) {
             if (testAABB(this, b)) {
                 if (this.vx > 0) this.x = b.x - this.width;
-                else if (this.vx < 0) this.x = b.x + b.width;
+                else this.x = b.x + b.width;
                 hitWall = true;
                 break;
             }
         }
+        if (hitWall) this.vx *= -1;
 
-        if (hitWall) this.vx *= -1; // Reverse direction
-
-        // Move Y
         this.y += this.vy;
         for (let b of level.blocks) {
             if (testAABB(this, b)) {
@@ -241,7 +225,7 @@ class Enemy {
 
     draw() {
         if (!this.isDead) {
-            drawSprite('enemy', this.x, this.y, this.width, this.height, this.color);
+            drawSprite('enemy', this.x, this.y, 16, 16, '#80f');
         }
     }
 }
@@ -252,156 +236,129 @@ class Block {
         this.y = y;
         this.width = TILE_SIZE;
         this.height = TILE_SIZE;
-        this.type = type; // 'solid', 'question', 'hidden', 'pipe'
-        
+        this.type = type;
         if (type === 'pipe') {
-            this.width = TILE_SIZE * 2;
-            this.height = TILE_SIZE * 2;
+            this.width = 32;
+            this.height = 32;
         }
-
         this.used = false;
     }
 
     hit() {
         if (this.type === 'question' && !this.used) {
             this.used = true;
-            game.coins++;
-            coinsEl.innerText = `x${game.coins.toString().padStart(2, '0')}`;
-            game.score += 100;
+            gameData.coins++;
+            coinsEl.innerText = `x${gameData.coins.toString().padStart(2, '0')}`;
+            gameData.score += 100;
         } else if (this.type === 'hidden' && !this.used) {
             this.used = true;
-            this.type = 'solid'; 
-            game.score += 500;
+            this.type = 'solid';
+            gameData.score += 500;
         }
     }
 
     draw() {
-        if (this.type === 'hidden' && !this.used) return; 
-
+        if (this.type === 'hidden' && !this.used) return;
         let c = '#8B4513';
         if (this.type === 'question') c = this.used ? '#555' : '#FFD700';
         if (this.type === 'pipe') c = '#00FF00';
-
-        let spr = 'block';
-        if (this.type === 'pipe') spr = 'pipe';
-
+        let spr = this.type === 'pipe' ? 'pipe' : 'block';
         drawSprite(spr, this.x, this.y, this.width, this.height, c);
     }
 }
 
-const game = {
-    score: 0,
-    coins: 0,
-    time: 400
-};
-
-let player;
-let level = {
-    blocks: [],
-    enemies: []
-};
-
-let cameraX = 0;
-
 function resetLevel() {
-    player = new Player(50, 50);
+    // Clean arrays
     level.blocks = [];
     level.enemies = [];
     cameraX = 0;
     
-    // Continuous Solid Floor
-    for (let i = 0; i < 150; i++) {
+    // Build floor - make it 2 tiles thick
+    for (let i = -5; i < 200; i++) {
+        level.blocks.push(new Block(i * TILE_SIZE, 192, 'solid'));
         level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
-        level.blocks.push(new Block(i * TILE_SIZE, 224, 'solid'));
     }
 
-    // Question blocks
-    level.blocks.push(new Block(10 * TILE_SIZE, 144, 'question'));
-    level.blocks.push(new Block(25 * TILE_SIZE, 144, 'question'));
+    // Some blocks to jump on
+    level.blocks.push(new Block(10 * TILE_SIZE, 128, 'question'));
+    level.blocks.push(new Block(11 * TILE_SIZE, 128, 'solid'));
+    level.blocks.push(new Block(12 * TILE_SIZE, 128, 'question'));
     
-    // Hidden block
-    level.blocks.push(new Block(15 * TILE_SIZE, 144, 'hidden'));
-
     // Pipe
-    level.blocks.push(new Block(40 * TILE_SIZE, 208 - TILE_SIZE*2, 'pipe'));
+    level.blocks.push(new Block(40 * TILE_SIZE, 160, 'pipe'));
 
-    // Walls
-    for(let i=0; i<15; i++) level.blocks.push(new Block(-16, i*16, 'solid'));
-
-    // Enemy placements
-    level.enemies.push(new Enemy(26 * TILE_SIZE, 192));
-    level.enemies.push(new Enemy(38 * TILE_SIZE, 192));
+    // Enemy
+    level.enemies.push(new Enemy(28 * TILE_SIZE, 160));
+    
+    // Setup player - start on floor
+    player = new Player(64, 176);
 }
 
 function startGame() {
     gameState = 'playing';
     startScreen.classList.remove('active');
     gameOverScreen.classList.remove('active');
-    game.score = 0;
-    game.coins = 0;
-    game.time = 400;
+    
+    gameData.score = 0;
+    gameData.coins = 0;
+    gameData.time = 400;
+    
     scoreEl.innerText = '000000';
     coinsEl.innerText = 'x00';
     timeEl.innerText = '400';
+    
     resetLevel();
 }
 
 function setGameOver() {
     gameState = 'gameOver';
-    finalScoreEl.innerText = game.score;
     gameOverScreen.classList.add('active');
 }
 
 function update() {
     if (gameState !== 'playing') return;
 
-    // Update entities
-    player.update();
-    
+    if (player) player.update();
     level.enemies.forEach(e => {
         e.update();
-        if (!e.isDead && testAABB(player, e) && player.state !== 'die') {
-            if (player.vy > 0 && player.y + player.height < e.y + e.height / 2 + 5) {
+        if (!e.isDead && player && testAABB(player, e) && player.state !== 'die') {
+            if (player.vy > 0 && player.y + player.height < e.y + 10) {
                 e.isDead = true;
-                player.vy = -3; 
-                game.score += 200;
+                player.vy = -3;
+                gameData.score += 200;
             } else {
                 player.die();
             }
         }
     });
 
-    // Camera follow
-    cameraX = player.x - (canvas.width / 2) + (player.width / 2);
-    if (cameraX < 0) cameraX = 0; 
+    if (player) {
+        cameraX = player.x - 128 + 7;
+        if (cameraX < 0) cameraX = 0;
+    }
 
-    // Update UI
-    scoreEl.innerText = game.score.toString().padStart(6, '0');
+    scoreEl.innerText = gameData.score.toString().padStart(6, '0');
     
-    // Simple time countdown (simplified)
-    if (Math.random() < 0.01) {
-        game.time--;
-        timeEl.innerText = game.time;
-        if (game.time <= 0) player.die();
+    if (Math.random() < 0.005) {
+        gameData.time--;
+        timeEl.innerText = gameData.time;
+        if (gameData.time <= 0 && player) player.die();
     }
 }
 
 function draw() {
-    // Clear canvas
+    // Clear with Sky Blue
     ctx.fillStyle = '#5c94fc';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === 'menu') return;
 
     ctx.save();
     ctx.translate(-Math.floor(cameraX), 0);
 
-    // Draw blocks
     level.blocks.forEach(b => b.draw());
-    
-    // Draw enemies
     level.enemies.forEach(e => e.draw());
-
-    // Draw player
-    player.draw();
+    if (player) player.draw();
 
     ctx.restore();
 }
@@ -412,10 +369,9 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// Event Listeners
 startBtn.addEventListener('click', startGame);
 restartBtn.addEventListener('click', startGame);
 
-// Init loop
+// Start loop
 loop();
 

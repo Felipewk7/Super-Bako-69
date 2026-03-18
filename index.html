@@ -13,22 +13,15 @@
 </head>
 <body>
     <main id="app-viewport">
-        <!-- Background Decorative Elements -->
-        <div class="bg-gradient"></div>
-        <div class="bg-grid"></div>
-
         <section id="game-wrapper">
             <!-- Start Screen -->
             <div id="start-screen" class="overlay active">
-                <div class="content">
-                    <h1 class="game-title">GRAVITY<br><span>QUEST</span></h1>
-                    <p class="subtitle">Super-Bako-69 Edition</p>
-                    <div class="controls-hint">
-                        <p>Use <span class="key">WASD</span> ou <span class="key">Setas</span> para mover</p>
-                        <p><span class="key">Espaço</span> para pular</p>
+                <div class="retro-border">
+                    <h1 class="game-title">GRAVITY QUEST</h1>
+                    <div class="menu-options">
+                        <button id="start-btn" class="retro-btn">1 PLAYER GAME</button>
                     </div>
-                    <button id="start-btn" class="primary-btn">INICIAR JOGO</button>
-                    <div class="version">v1.2.0</div>
+                    <div class="copyright">© 2026 SUPER-BAKO-69 CO.</div>
                 </div>
             </div>
 
@@ -36,18 +29,22 @@
             <div id="game-container">
                 <canvas id="gameCanvas" width="256" height="224"></canvas>
                 
-                <!-- HUD Overlay -->
-                <header id="hud">
-                    <div class="hud-item" id="score-container">
-                        <label>PONTOS</label>
+                <!-- HUD Overlay (SMB Style) -->
+                <header id="hud" class="retro-hud">
+                    <div class="hud-column">
+                        <span>MARIO</span>
                         <span id="score">000000</span>
                     </div>
-                    <div class="hud-item" id="coins-container">
-                        <label>MOEDAS</label>
+                    <div class="hud-column">
+                        <span>&nbsp;</span>
                         <span id="coins">x00</span>
                     </div>
-                    <div class="hud-item" id="time-container">
-                        <label>TEMPO</label>
+                    <div class="hud-column">
+                        <span>WORLD</span>
+                        <span>1-1</span>
+                    </div>
+                    <div class="hud-column">
+                        <span>TIME</span>
                         <span id="time">400</span>
                     </div>
                 </header>
@@ -56,11 +53,8 @@
             <!-- Game Over Screen -->
             <div id="game-over-screen" class="overlay">
                 <div class="content">
-                    <h2 class="status-title">FIM DE JOGO</h2>
-                    <div class="stats">
-                        <p>Score Final: <span id="final-score">0</span></p>
-                    </div>
-                    <button id="restart-btn" class="primary-btn">TENTAR NOVAMENTE</button>
+                    <h2 class="status-title">GAME OVER</h2>
+                    <button id="restart-btn" class="retro-btn">RETRY</button>
                 </div>
             </div>
         </section>

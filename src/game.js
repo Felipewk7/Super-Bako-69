@@ -2,11 +2,23 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+// UI Elements
+const startScreen = document.getElementById('start-screen');
+const gameOverScreen = document.getElementById('game-over-screen');
+const startBtn = document.getElementById('start-btn');
+const restartBtn = document.getElementById('restart-btn');
+const scoreEl = document.getElementById('score');
+const coinsEl = document.getElementById('coins');
+const timeEl = document.getElementById('time');
+const finalScoreEl = document.getElementById('final-score');
+
 // Configs
 const TILE_SIZE = 16;
 const GRAVITY = 0.25;
 const FRICTION = 0.8;
 const MAX_FALL_SPEED = 6;
+
+let gameState = 'menu'; // 'menu', 'playing', 'gameOver'
 
 // Input handling
 const keys = {
@@ -17,6 +29,7 @@ const keys = {
 };
 
 window.addEventListener('keydown', e => {
+    if (gameState !== 'playing') return;
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
     if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = true;
@@ -172,9 +185,9 @@ class Player {
         this.state = 'die';
         this.vy = -4; // Bounce up
         this.vx = 0;
-        // Basic respawn logic
+        
         setTimeout(() => {
-            resetLevel();
+            setGameOver();
         }, 1500);
     }
 
@@ -252,19 +265,18 @@ class Block {
     hit() {
         if (this.type === 'question' && !this.used) {
             this.used = true;
-            // Spawn coin or item
             game.coins++;
-            document.getElementById('coins').innerText = `COINS: x${game.coins.toString().padStart(2, '0')}`;
+            coinsEl.innerText = `x${game.coins.toString().padStart(2, '0')}`;
             game.score += 100;
         } else if (this.type === 'hidden' && !this.used) {
             this.used = true;
-            this.type = 'solid'; // Becomes visible solid block
-            game.score += 500; // Hidden item found
+            this.type = 'solid'; 
+            game.score += 500;
         }
     }
 
     draw() {
-        if (this.type === 'hidden' && !this.used) return; // Invisible
+        if (this.type === 'hidden' && !this.used) return; 
 
         let c = '#8B4513';
         if (this.type === 'question') c = this.used ? '#555' : '#FFD700';
@@ -297,7 +309,7 @@ function resetLevel() {
     level.enemies = [];
     cameraX = 0;
     
-    // Continuous Solid Floor to avoid the illusion of terrain vanishing
+    // Continuous Solid Floor
     for (let i = 0; i < 150; i++) {
         level.blocks.push(new Block(i * TILE_SIZE, 208, 'solid'));
         level.blocks.push(new Block(i * TILE_SIZE, 224, 'solid'));
@@ -313,44 +325,65 @@ function resetLevel() {
     // Pipe
     level.blocks.push(new Block(40 * TILE_SIZE, 208 - TILE_SIZE*2, 'pipe'));
 
-    // Walls to prevent leaving start area
-    level.blocks.push(new Block(-16, 0, 'solid'));
-    level.blocks.push(new Block(-16, 16, 'solid'));
-    // Make wall tall...
+    // Walls
     for(let i=0; i<15; i++) level.blocks.push(new Block(-16, i*16, 'solid'));
 
-    // Enemy placements (after intro)
+    // Enemy placements
     level.enemies.push(new Enemy(26 * TILE_SIZE, 192));
     level.enemies.push(new Enemy(38 * TILE_SIZE, 192));
 }
 
+function startGame() {
+    gameState = 'playing';
+    startScreen.classList.remove('active');
+    gameOverScreen.classList.remove('active');
+    game.score = 0;
+    game.coins = 0;
+    game.time = 400;
+    scoreEl.innerText = '000000';
+    coinsEl.innerText = 'x00';
+    timeEl.innerText = '400';
+    resetLevel();
+}
+
+function setGameOver() {
+    gameState = 'gameOver';
+    finalScoreEl.innerText = game.score;
+    gameOverScreen.classList.add('active');
+}
+
 function update() {
+    if (gameState !== 'playing') return;
+
     // Update entities
     player.update();
     
     level.enemies.forEach(e => {
         e.update();
-        // Combat checking (stomp)
         if (!e.isDead && testAABB(player, e) && player.state !== 'die') {
-            // If player is falling and their bottom is above enemy center, it's a stomp
             if (player.vy > 0 && player.y + player.height < e.y + e.height / 2 + 5) {
                 e.isDead = true;
-                player.vy = -3; // Bounce off enemy
+                player.vy = -3; 
                 game.score += 200;
             } else {
-                // Player takes damage
                 player.die();
             }
         }
     });
 
-    // Camera follow (center on player)
+    // Camera follow
     cameraX = player.x - (canvas.width / 2) + (player.width / 2);
-    if (cameraX < 0) cameraX = 0; // Prevent scrolling before the start
-
+    if (cameraX < 0) cameraX = 0; 
 
     // Update UI
-    document.getElementById('score').innerText = `SCORE: ${game.score.toString().padStart(6, '0')}`;
+    scoreEl.innerText = game.score.toString().padStart(6, '0');
+    
+    // Simple time countdown (simplified)
+    if (Math.random() < 0.01) {
+        game.time--;
+        timeEl.innerText = game.time;
+        if (game.time <= 0) player.die();
+    }
 }
 
 function draw() {
@@ -379,6 +412,10 @@ function loop() {
     requestAnimationFrame(loop);
 }
 
-// Start Game
-resetLevel();
-requestAnimationFrame(loop);
+// Event Listeners
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', startGame);
+
+// Init loop
+loop();
+

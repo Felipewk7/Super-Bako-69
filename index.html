@@ -1,23 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gravity Quest</title>
+    <meta name="description" content="Gravity Quest - Uma aventura épica de plataforma retro.">
+    <title>Gravity Quest | Super-Bako-69</title>
     <link rel="stylesheet" href="./src/style.css">
+    <!-- Google Fonts for a premium look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="game-container">
-        <!-- The original NES resolution is roughly 256x224 -->
-        <canvas id="gameCanvas" width="256" height="224"></canvas>
-        <div id="ui-layer">
-            <span id="score">SCORE: 000000</span>
-            <span id="coins">COINS: x00</span>
-            <span id="time">TIME: 400</span>
-        </div>
-    </div>
-    
+    <main id="app-viewport">
+        <!-- Background Decorative Elements -->
+        <div class="bg-gradient"></div>
+        <div class="bg-grid"></div>
+
+        <section id="game-wrapper">
+            <!-- Start Screen -->
+            <div id="start-screen" class="overlay active">
+                <div class="content">
+                    <h1 class="game-title">GRAVITY<br><span>QUEST</span></h1>
+                    <p class="subtitle">Super-Bako-69 Edition</p>
+                    <div class="controls-hint">
+                        <p>Use <span class="key">WASD</span> ou <span class="key">Setas</span> para mover</p>
+                        <p><span class="key">Espaço</span> para pular</p>
+                    </div>
+                    <button id="start-btn" class="primary-btn">INICIAR JOGO</button>
+                    <div class="version">v1.2.0</div>
+                </div>
+            </div>
+
+            <!-- Game Layer -->
+            <div id="game-container">
+                <canvas id="gameCanvas" width="256" height="224"></canvas>
+                
+                <!-- HUD Overlay -->
+                <header id="hud">
+                    <div class="hud-item" id="score-container">
+                        <label>PONTOS</label>
+                        <span id="score">000000</span>
+                    </div>
+                    <div class="hud-item" id="coins-container">
+                        <label>MOEDAS</label>
+                        <span id="coins">x00</span>
+                    </div>
+                    <div class="hud-item" id="time-container">
+                        <label>TEMPO</label>
+                        <span id="time">400</span>
+                    </div>
+                </header>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="game-over-screen" class="overlay">
+                <div class="content">
+                    <h2 class="status-title">FIM DE JOGO</h2>
+                    <div class="stats">
+                        <p>Score Final: <span id="final-score">0</span></p>
+                    </div>
+                    <button id="restart-btn" class="primary-btn">TENTAR NOVAMENTE</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <!-- Game Scripts -->
     <script src="./src/game.js"></script>
 </body>
 </html>
+

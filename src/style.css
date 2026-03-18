@@ -1,24 +1,208 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* Modern Retro Design System */
+:root {
+    --primary: #00f2ff;
+    --secondary: #7000ff;
+    --accent: #ff00ea;
+    --bg-dark: #0a0a12;
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --font-pixel: 'Press Start 2P', cursive;
+    --font-ui: 'Outfit', sans-serif;
+}
 
-html, body {
+* {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+}
+
+body, html {
     margin: 0;
     padding: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #000;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-dark);
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: 'Press Start 2P', monospace;
+    font-family: var(--font-ui);
     overflow: hidden;
+    color: #fff;
 }
 
-#game-container {
+/* Background Effects */
+.bg-gradient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a12 100%);
+    z-index: -2;
+}
+
+.bg-grid {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: -1;
+    perspective: 1000px;
+    transform: rotateX(60deg) translateY(-200px);
+    opacity: 0.5;
+}
+
+/* Main Layout */
+#app-viewport {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#game-wrapper {
     position: relative;
     width: 100%;
     height: 100%;
     max-width: 1024px;   /* 256 * 4 */
     max-height: 896px;   /* 224 * 4 */
+    background: #000;
+    border: 4px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(112, 0, 255, 0.2);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Screens & HUD */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 18, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.content {
+    text-align: center;
+    animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.game-title {
+    font-family: var(--font-pixel);
+    font-size: 3rem;
+    margin: 0;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.5));
+}
+
+.game-title span {
+    font-size: 4rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 1rem;
+    letter-spacing: 4px;
+}
+
+/* UI Elements */
+.primary-btn {
+    margin-top: 2rem;
+    padding: 1rem 2.5rem;
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    background: var(--primary);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+}
+
+.primary-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 242, 255, 0.6);
+    background: #fff;
+}
+
+.controls-hint {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.key {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--primary);
+}
+
+/* HUD System */
+#hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.hud-item {
+    background: var(--glass);
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--glass-border);
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hud-item label {
+    font-size: 0.6rem;
+    font-family: var(--font-pixel);
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 4px;
+}
+
+.hud-item span {
+    font-family: var(--font-pixel);
+    font-size: 1rem;
+    color: var(--primary);
+}
+
+/* Game Canvas */
+#game-container {
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -28,26 +212,32 @@ canvas {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    /* Keeps the pixels sharp when scaling canvas up */
-    image-rendering: pixelated; 
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    image-rendering: pixelated;
 }
 
-#ui-layer {
-    position: absolute;
-    top: 5%;
-    left: 5%;
-    right: 5%;
-    display: flex;
-    justify-content: space-between;
-    color: #fff;
-    font-size: 1.2vw;
-    text-shadow: 2px 2px 0 #000;
-    pointer-events: none;
+/* Animations */
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-@media (min-width: 1024px) {
-    #ui-layer {
-        font-size: 16px;
-    }
+@keyframes pulse {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
 }
+
+.version {
+    margin-top: 3rem;
+    font-size: 0.7rem;
+    opacity: 0.3;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .game-title { font-size: 1.5rem; }
+    .game-title span { font-size: 2rem; }
+    .hud-item span { font-size: 0.7rem; }
+    .hud-item label { font-size: 0.4rem; }
+}
+
